@@ -109,13 +109,18 @@ export function BoardCard({ card, onOpen, onChanged }: Props) {
         </span>
       </div>
 
-      <DeleteCardDialog
-        cardId={card.id}
-        cardTitle={card.title}
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        onDeleted={onChanged}
-      />
+      <span
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <DeleteCardDialog
+          cardId={card.id}
+          cardTitle={card.title}
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          onDeleted={onChanged}
+        />
+      </span>
     </div>
   )
 }

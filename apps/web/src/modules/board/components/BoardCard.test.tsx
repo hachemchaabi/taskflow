@@ -54,4 +54,13 @@ describe('BoardCard', () => {
     expect(onOpen).not.toHaveBeenCalled()
     expect(await screen.findByText(/will be permanently deleted/)).toBeInTheDocument()
   })
+
+  it('does not trigger onOpen when interacting inside the delete dialog', async () => {
+    const onOpen = vi.fn()
+    render(<BoardCard card={card} onOpen={onOpen} onChanged={vi.fn()} />)
+    fireEvent.click(screen.getByLabelText('Delete task'))
+    await screen.findByText(/will be permanently deleted/)
+    fireEvent.click(screen.getByText('Cancel'))
+    expect(onOpen).not.toHaveBeenCalled()
+  })
 })

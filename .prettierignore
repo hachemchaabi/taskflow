@@ -1,0 +1,5 @@
+node_modules
+apps/web/dist
+apps/api/dist
+coverage
+package-lock.json

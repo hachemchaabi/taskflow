@@ -1,0 +1,319 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Raw brand palette — registered in @theme so Tailwind generates the
+   bg-/text-/border- utilities (e.g. bg-chartwell-blue). @theme also emits
+   each token to :root, so var(--color-*) references keep resolving. */
+@theme {
+  --color-cloud-white: #ffffff;
+  --color-canvas-fog: #fafaf9;
+  --color-slate-text: #0c0a09;
+  --color-ash-gray: #78716c;
+  --color-stone-border: #e5e7eb;
+  --color-platinum-outline: #d6d3d1;
+  --color-steel-gray: #a8a29e;
+  --color-hover-stone: #c9c5c2;
+  --color-ghost-ink: #1c1917;
+  --color-chartwell-blue: #3ba6f1;
+  --color-sky-tint: #c1e1f7;
+  --color-destructive-red: #e5484d;
+}
+
+:root {
+  --surface-subtle-accent: color-mix(in srgb, var(--color-ash-gray) 10%, transparent);
+
+  --background: var(--color-canvas-fog);
+  --foreground: var(--color-slate-text);
+  --card: var(--color-cloud-white);
+  --card-foreground: var(--color-slate-text);
+  --popover: var(--color-cloud-white);
+  --popover-foreground: var(--color-slate-text);
+  --primary: var(--color-chartwell-blue);
+  --primary-foreground: var(--color-cloud-white);
+  --secondary: var(--surface-subtle-accent);
+  --secondary-foreground: var(--color-slate-text);
+  --muted: var(--surface-subtle-accent);
+  --muted-foreground: var(--color-ash-gray);
+  --accent: var(--color-sky-tint);
+  --accent-foreground: var(--color-slate-text);
+  --destructive: var(--color-destructive-red);
+  --destructive-foreground: var(--color-cloud-white);
+  --border: var(--color-stone-border);
+  --input: var(--color-platinum-outline);
+  --ring: var(--color-chartwell-blue);
+
+  --info: var(--color-chartwell-blue);
+  --info-foreground: var(--color-cloud-white);
+  --success: #16a34a;
+  --success-foreground: var(--color-cloud-white);
+  --warning: #d97706;
+  --warning-foreground: var(--color-cloud-white);
+
+  --sidebar: var(--color-cloud-white);
+  --sidebar-foreground: var(--color-slate-text);
+  --sidebar-primary: var(--color-chartwell-blue);
+  --sidebar-primary-foreground: var(--color-cloud-white);
+  --sidebar-accent: var(--color-sky-tint);
+  --sidebar-accent-foreground: var(--color-slate-text);
+  --sidebar-border: var(--color-stone-border);
+  --sidebar-ring: var(--color-chartwell-blue);
+
+  --chart-1: var(--color-chartwell-blue);
+  --chart-2: var(--color-sky-tint);
+  --chart-3: var(--color-steel-gray);
+  --chart-4: var(--color-ash-gray);
+  --chart-5: var(--color-slate-text);
+
+  --radius: 0.625rem;
+
+  --text-caption: 12px;
+  --leading-caption: 1.5;
+  --tracking-caption: 0.048px;
+  --text-heading-sm: 18px;
+  --leading-heading-sm: 1.25;
+  --tracking-heading-sm: -0.016px;
+  --text-heading: 20px;
+  --leading-heading: 1.2;
+  --tracking-heading: -0.017px;
+  --text-heading-lg: 32px;
+  --leading-heading-lg: 1.12;
+  --tracking-heading-lg: -0.021px;
+  --text-display: 52px;
+  --leading-display: 1;
+  --tracking-display: -0.025px;
+
+  --section-gap: 48px;
+  --card-padding: 24px;
+  --element-gap: 8px;
+
+  --shadow-subtle: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  --shadow-sm: rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px;
+  --shadow-md: rgba(0, 0, 0, 0.05) 0px 4px 16px 0px;
+  --shadow-xl: rgba(17, 12, 46, 0.12) 0px 12px 45px 0px;
+
+  --animate-card-pulse: card-pulse 1.2s ease-out 1;
+}
+
+.dark {
+  --dark-base: #0b1120;
+  --background: var(--dark-base);
+  --foreground: var(--color-canvas-fog);
+  --card: color-mix(in srgb, var(--color-canvas-fog) 7%, var(--dark-base));
+  --card-foreground: var(--color-canvas-fog);
+  --popover: color-mix(in srgb, var(--color-canvas-fog) 7%, var(--dark-base));
+  --popover-foreground: var(--color-canvas-fog);
+
+  --primary: var(--color-chartwell-blue);
+  --primary-foreground: var(--color-slate-text);
+
+  --secondary: color-mix(in srgb, var(--color-canvas-fog) 8%, transparent);
+  --secondary-foreground: var(--color-canvas-fog);
+  --muted: color-mix(in srgb, var(--color-canvas-fog) 8%, transparent);
+  --muted-foreground: var(--color-steel-gray);
+
+  --accent: color-mix(in srgb, var(--color-chartwell-blue) 22%, var(--dark-base));
+  --accent-foreground: var(--color-canvas-fog);
+
+  --border: color-mix(in srgb, var(--color-canvas-fog) 10%, transparent);
+  --input: color-mix(in srgb, var(--color-canvas-fog) 16%, transparent);
+  --ring: var(--color-chartwell-blue);
+
+  --sidebar: var(--dark-base);
+  --sidebar-foreground: var(--color-canvas-fog);
+  --sidebar-primary: var(--color-chartwell-blue);
+  --sidebar-primary-foreground: var(--color-slate-text);
+  --sidebar-accent: color-mix(in srgb, var(--color-chartwell-blue) 20%, var(--dark-base));
+  --sidebar-accent-foreground: var(--color-canvas-fog);
+  --sidebar-border: color-mix(in srgb, var(--color-canvas-fog) 10%, transparent);
+  --sidebar-ring: var(--color-chartwell-blue);
+
+  --shadow-subtle: rgba(0, 0, 0, 0.3) 0px 1px 2px 0px;
+  --shadow-sm: rgba(0, 0, 0, 0.4) 0px 4px 6px -1px, rgba(0, 0, 0, 0.4) 0px 2px 4px -2px;
+  --shadow-md: rgba(0, 0, 0, 0.4) 0px 4px 16px 0px;
+  --shadow-xl: rgba(0, 0, 0, 0.5) 0px 12px 45px 0px;
+}
+
+@theme inline {
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-heading:
+    'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-mono:
+    'Geist Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: var(--radius);
+  --radius-xl: 16px;
+  --radius-2xl: 16px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --animate-skeleton: skeleton 2s -1s infinite linear;
+  --animate-caret-blink: 1s ease-out infinite caret-blink;
+  --animate-toast-success-odd: toast-success-odd 0.32s cubic-bezier(0.5, 1, 0.89, 1);
+  --animate-toast-success-even: toast-success-even 0.32s cubic-bezier(0.5, 1, 0.89, 1);
+  --animate-toast-error-odd: toast-error-odd 0.28s cubic-bezier(0.5, 1, 0.89, 1);
+  --animate-toast-error-even: toast-error-even 0.28s cubic-bezier(0.5, 1, 0.89, 1);
+  --animate-tab-fade: tab-fade 0.2s ease-out;
+
+  @keyframes tab-fade {
+    from {
+      opacity: 0;
+      filter: blur(4px);
+      translate: 0 4px;
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+      translate: 0 0;
+    }
+  }
+
+  @keyframes skeleton {
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  @keyframes caret-blink {
+    0%,
+    70%,
+    to {
+      opacity: 1;
+    }
+    20%,
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes toast-success-odd {
+    0% {
+      scale: 1;
+    }
+    30% {
+      scale: 1.025;
+    }
+    60% {
+      scale: 0.99;
+    }
+    100% {
+      scale: 1;
+    }
+  }
+
+  @keyframes toast-error-odd {
+    0% {
+      translate: 0 0;
+    }
+    25% {
+      translate: -3px 0;
+    }
+    50% {
+      translate: 3px 0;
+    }
+    75% {
+      translate: -3px 0;
+    }
+    100% {
+      translate: 0 0;
+    }
+  }
+
+  @keyframes toast-success-even {
+    0% {
+      scale: 1;
+    }
+    30% {
+      scale: 1.025;
+    }
+    60% {
+      scale: 0.99;
+    }
+    100% {
+      scale: 1;
+    }
+  }
+
+  @keyframes toast-error-even {
+    0% {
+      translate: 0 0;
+    }
+    25% {
+      translate: -3px 0;
+    }
+    50% {
+      translate: 3px 0;
+    }
+    75% {
+      translate: -3px 0;
+    }
+    100% {
+      translate: 0 0;
+    }
+  }
+}
+
+@keyframes card-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 8px color-mix(in oklch, var(--primary) 0%, transparent);
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+}

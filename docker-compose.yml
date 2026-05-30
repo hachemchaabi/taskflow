@@ -1,0 +1,50 @@
+# Runs the backend API and its PostgreSQL database.
+#   docker compose up --build
+# The API is reachable on http://localhost:4000 (health: /api/health).
+name: collab-task-manager
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: collab_task_manager
+    ports:
+      # Host 5433 -> container 5432 (host 5432 is often taken by a local Postgres).
+      - '5433:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d collab_task_manager']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+    restart: unless-stopped
+    # Loads DROPBOX_* (and anything else) from apps/api/.env. The explicit
+    # `environment` values below take precedence, so the container still talks to
+    # the `db` service rather than the .env's localhost DATABASE_URL.
+    env_file:
+      - ./apps/api/.env
+    environment:
+      # `db` is the service hostname on the compose network.
+      DATABASE_URL: 'postgresql://postgres:postgres@db:5432/collab_task_manager?schema=public'
+      PORT: '4000'
+      CLIENT_ORIGIN: 'http://localhost:5173'
+      # Dev-only JWT secrets — required by src/config/env.ts. Override these in
+      # any real deployment (see apps/api/.env.example).
+      JWT_SECRET: 'dev-access-secret-change-me'
+      JWT_REFRESH_SECRET: 'dev-refresh-secret-change-me'
+    ports:
+      - '4000:4000'
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

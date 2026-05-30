@@ -1,0 +1,309 @@
+// Prisma schema for the Collaborative Task Manager (Option B).
+// Models a Trello-like domain: users collaborate on boards, which contain
+// ordered lists (columns), which contain cards (tasks) with labels and comments.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String // NOTE: store a hash here, never plaintext (see authController).
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownedBoards     Board[]          @relation("BoardOwner")
+  memberships     BoardMember[]
+  assignedCards   Card[]           @relation("CardAssignees")
+  createdCards    Card[]           @relation("CardCreator")
+  comments        Comment[]
+  commentMentions CommentMention[]
+  activities      Activity[]
+
+  ownedWorkspaces      Workspace[]       @relation("WorkspaceOwner")
+  workspaceMemberships WorkspaceMember[]
+  sentInvites          WorkspaceInvite[] @relation("InviteSender")
+
+  notifications      Notification[]          @relation("NotificationRecipient")
+  actedNotifications Notification[]          @relation("NotificationActor")
+  notificationPref   NotificationPreference?
+  notificationMutes  NotificationMute[]
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  title       String
+  iconUrl     String?
+  ownerId     String
+  workspaceId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner      User          @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  workspace  Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members    BoardMember[]
+  lists      List[]
+  labels     Label[]
+  activities Activity[]
+
+  notifications Notification[]
+  mutes         NotificationMute[]
+}
+
+// Join table giving a user a role on a board (team collaboration).
+model BoardMember {
+  id      String     @id @default(cuid())
+  boardId String
+  userId  String
+  role    MemberRole @default(MEMBER)
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, userId])
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Workspace {
+  id                String     @id @default(cuid())
+  name              String
+  slug              String     @unique
+  description       String?
+  logoUrl           String?
+  locale            String     @default("en")
+  visibility        Visibility @default(PRIVATE)
+  defaultMemberRole MemberRole @default(MEMBER)
+  ownerId           String
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  owner   User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members WorkspaceMember[]
+  boards  Board[]
+  invites WorkspaceInvite[]
+
+  notifications Notification[]
+  mutes         NotificationMute[]
+}
+
+// Who can discover/view a workspace. Stored and surfaced in settings; board-level
+// access enforcement for PUBLIC workspaces is intentionally out of scope for now.
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  INVITE_ONLY
+}
+
+model WorkspaceMember {
+  id          String     @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        MemberRole @default(MEMBER)
+  createdAt   DateTime   @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+}
+
+model WorkspaceInvite {
+  id          String       @id @default(cuid())
+  workspaceId String
+  email       String
+  role        MemberRole   @default(MEMBER)
+  status      InviteStatus @default(PENDING)
+  invitedById String
+  createdAt   DateTime     @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("InviteSender", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, email])
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+// A column on a board (e.g. "To Do", "In Progress", "Done").
+model List {
+  id        String   @id @default(cuid())
+  title     String
+  position  Int // order of the column within the board
+  boardId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards Card[]
+}
+
+model Card {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  position    Int
+  priority    Priority  @default(NONE)
+  startDate   DateTime?
+  endDate     DateTime?
+  listId      String
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  list       List       @relation(fields: [listId], references: [id], onDelete: Cascade)
+  createdBy  User?      @relation("CardCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  assignees  User[]     @relation("CardAssignees")
+  labels     Label[]    @relation("CardLabels")
+  comments   Comment[]
+  activities Activity[]
+
+  notifications Notification[]
+}
+
+// Task priority. NONE is the default ("no priority"); HIGH/MEDIUM/LOW render a
+// colored band on the card.
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+  NONE
+}
+
+model Label {
+  id      String @id @default(cuid())
+  name    String
+  color   String // hex color, e.g. "#ef4444"
+  boardId String
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards Card[] @relation("CardLabels")
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  body      String // may embed @[userId] mention tokens, resolved via `mentions`
+  cardId    String
+  authorId  String
+  parentId  String? // set on replies; always points at a top-level comment (one level deep)
+  createdAt DateTime  @default(now())
+  editedAt  DateTime? // set when the body is edited (drives the "(edited)" label)
+  deletedAt DateTime? // soft delete: row kept for thread context, body cleared
+
+  card     Card             @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  author   User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent   Comment?         @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[]        @relation("CommentReplies")
+  mentions CommentMention[]
+}
+
+// A user referenced via an @mention inside a comment. The body carries the
+// position (the @[userId] token); this join enforces that only board members
+// can be mentioned and lets us resolve names at render time.
+model CommentMention {
+  id        String @id @default(cuid())
+  commentId String
+  userId    String
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+}
+
+// Activity feed entries for a board (created card, moved card, etc.).
+model Activity {
+  id        String   @id @default(cuid())
+  boardId   String
+  cardId    String?
+  userId    String
+  action    String // human-readable, e.g. "moved \"Fix bug\" to Done"
+  createdAt DateTime @default(now())
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  card  Card? @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// An in-app notification delivered to a single recipient. The display fields
+// (actorName, title, …) are snapshotted into `data` at creation so the row
+// still renders after the linked card/board/workspace is deleted; the nullable
+// relations are only used to build live links and to enforce workspace scoping
+// (a link goes inactive once the recipient leaves the workspace — see Epic 8.5).
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  type        NotificationType
+  actorId     String?
+  workspaceId String?
+  boardId     String?
+  cardId      String?
+  data        Json // { actorName, title, message, ...type-specific context }
+  readAt      DateTime?
+  createdAt   DateTime         @default(now())
+
+  user      User       @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor     User?      @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  board     Board?     @relation(fields: [boardId], references: [id], onDelete: SetNull)
+  card      Card?      @relation(fields: [cardId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+enum NotificationType {
+  CARD_ASSIGNED
+  MENTION
+  COMMENT_ON_ASSIGNED
+  WORKSPACE_INVITE
+  CARD_MOVED
+  STATUS_CHANGED
+}
+
+// Per-user delivery settings: one in-app toggle per notification type plus a
+// Do-Not-Disturb window. A missing row means "all defaults on, no DND".
+model NotificationPreference {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  cardAssigned      Boolean   @default(true)
+  mention           Boolean   @default(true)
+  commentOnAssigned Boolean   @default(true)
+  workspaceInvite   Boolean   @default(true)
+  cardMoved         Boolean   @default(true)
+  statusChanged     Boolean   @default(true)
+  dndUntil          DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// A silenced board or workspace for a given user. Exactly one of boardId /
+// workspaceId is set per row; notifications scoped to it are never created.
+model NotificationMute {
+  id          String  @id @default(cuid())
+  userId      String
+  workspaceId String?
+  boardId     String?
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  board     Board?     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@unique([userId, boardId])
+}

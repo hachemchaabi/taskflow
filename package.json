@@ -1,0 +1,27 @@
+{
+  "name": "collab-task-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Collaborative Task Manager — a Trello-like team task board (React capstone, Option B).",
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w @ctm/api\" \"npm run dev -w @ctm/web\"",
+    "dev:web": "npm run dev -w @ctm/web",
+    "dev:api": "npm run dev -w @ctm/api",
+    "build": "npm run build -w @ctm/api && npm run build -w @ctm/web",
+    "lint": "npm run lint -w @ctm/web && npm run lint -w @ctm/api",
+    "format": "prettier --write \"apps/web/src/**/*.{ts,tsx,css}\" \"apps/api/src/**/*.ts\"",
+    "test": "npm run test -w @ctm/web",
+    "db:generate": "npm run db:generate -w @ctm/api",
+    "db:migrate": "npm run db:migrate -w @ctm/api",
+    "db:seed": "npm run db:seed -w @ctm/api",
+    "db:studio": "npm run db:studio -w @ctm/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "prettier": "^3.4.2"
+  }
+}
